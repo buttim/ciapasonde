@@ -30,6 +30,9 @@ class Display:
     self.draw = ImageDraw.Draw(self.img)
 
     self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+    self.fontSmall = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
+
+    self.ip='?.?.?.?'
     self.id='????????'
     self.lat=0
     self.lng=0
@@ -41,4 +44,9 @@ class Display:
     self.draw.text((20,25),f"{self.lat}",font=self.font,fill=(0,0,0))
     self.draw.text((20,45),f"{self.lng}",font=self.font,fill=(0,0,0))
     self.draw.text((20,70),f"{self.alt}m",font=self.font,fill=(0,0,0))
+    self.draw.text((5,110),f"IP {self.ip}",font=self.fontSmall,fill=(0,0,0))
     self.disp.display(self.img)
+
+  def close(self):
+    self.disp.reset();
+    GPIO.output(23, GPIO.LOW)

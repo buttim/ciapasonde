@@ -4,11 +4,22 @@ import time
 import serial
 import threading
 import logging
+import socket
 from display import Display
 from buzzer import Buzzer
+from enum import Enum
+
+
+class TipoSonda(Enum):
+  RS41=1
+  M20=2
+  M10=3
+  PIL=4
+  DFM=5
+  C50=6
 
 ver='CIAPA-0.0'
-type='RS41'
+type=1
 freq=403.7
 bat=0
 batv=0
@@ -23,18 +34,46 @@ clb=0
 volt=0
 snr=0
 
+def get_local_ip():
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  try:
+    # doesn't even have to be reachable
+    s.connect(('192.255.255.255', 1))
+    IP = s.getsockname()[0]
+  except:
+    IP = '127.0.0.1'
+  finally:
+    s.close()
+  return IP
+ 
+def getSDRconfig(tipo,freq):
+  if tipo==TipoSonda.DFM:
+    return f'f {freq} 5 65 0 6000'
+  elif tipo==TipoSonda.M10:
+    #With M10 reception, it is essential to increase the sample rate for sdrtst and sondeudp to at least 20000Hz!
+    return f'f {freq} 8 80 0 20000'
+  else:
+    return f'f {freq} 5 70 0 12000'
+
+
 def btMessage():
-    if id=='':
-        return f'0/{type}/{freq}/{snr}/{bat}/{batv}/{1 if mute else 0}/{ver}/o\r\n'
+  global type, freq, snr, bat, batv, mute, ver, lat, lng, alt, vel
+  if id=='':
+    return f'0/{TipoSonda(type).name}/{freq}/{snr}/{bat}/{batv}/{1 if mute else 0}/{ver}/o\r\n'
+  else:
+    sign=0
+    afc=0
+    bk=0
+    bktime=0
+    if lat==0 and lng==0:
+      return f'2/{TipoSonda(type).name}/{freq}/{id}/S{snr}/{bat}/{afc}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
     else:
-        sign=0
-        afc=0
-        bk=0
-        bktime=0
-        if lat==0 and lng==0:
-            return f'2/{type}/{freq}/{id}/S{snr}/{bat}/{afc}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
-        else:
-            return f'1/{type}/{freq}/{id}/{lat}/{lng}/{alt}/{vel}/{snr}/{bat}/{afc}/{bk}/{bktime}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
+      return f'1/{TipoSonda(type).name}/{freq}/{id}/{lat}/{lng}/{alt}/{vel}/{snr}/{bat}/{afc}/{bk}/{bktime}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
+
+def writeSDRconfig():
+  global type, freq
+  with open('sdr_config.txt','w') as file:
+      file.write(getSDRconfig(type,freq))
 
 def process(s):
     global freq
@@ -51,18 +90,22 @@ def process(s):
     for cmd in a:
         c=cmd.split('=')
         if len(c)!=2:
-            logging.warning('malformed command "'+cmd+'"')
+            logging.warning('Malformed command "'+cmd+'"')
         else:
             if c[0]=='tipo':
-                pass    # TODO
+              try:
+                type=int(c[1])
+                logging.info('New type: '+str(type))
+              except:
+                logging.warning('Bad argument for t command ('+c[1]+')')
+              writeSDRconfig()
             elif c[0]=='f':
-                try:
-                    freq=float(c[1])
-                    with open('sdr_config.txt','w') as file:
-                        file.write(f'f {freq} 10 0 70 12000\n')
-                    logging.info('New frequency: '+str(freq))
-                except:
-                    logging.warning('bad argument for f command ('+c[1]+')')
+              try:
+                  freq=float(c[1])
+                  logging.info('New frequency: '+str(freq))
+              except:
+                  logging.warning('Bad argument for f command ('+c[1]+')')
+              writeSDRconfig()
             elif c[0]=='mute':
                 mute=c[1]=='1'
                 logging.info(f'Mute: {mute}')
@@ -94,8 +137,11 @@ def threadFunc():
         connected=False
         logging.info("Serial disconnected")
       time.sleep(1)
+      disp.ip=get_local_ip()
+      disp.update()
 
 disp=Display()
+disp.ip=get_local_ip()
 disp.update()
 
 logging.basicConfig(format="%(asctime)s: %(message)s",level=logging.INFO,datefmt="%H:%M:%S")
@@ -130,4 +176,5 @@ try:
         except:
           logging.info('errore analisi: '+line.strip())
 except KeyboardInterrupt:
+    disp.close()
     logging.info('Ciapasonde stopped')
