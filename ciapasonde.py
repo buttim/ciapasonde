@@ -73,7 +73,7 @@ def btMessage():
 def writeSDRconfig():
   global type, freq
   with open('sdr_config.txt','w') as file:
-      file.write(getSDRconfig(type,freq))
+      file.write(getSDRconfig(type,freq)+'\r\n')
 
 def process(s):
     global freq
