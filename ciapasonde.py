@@ -16,6 +16,7 @@ class TipoSonda(Enum):
 
 def stop(signum, frame):
   disp.close()
+  GPIO.cleanup()
   logging.info('Ciapasonde stopped')
   exit(0)
 
@@ -162,29 +163,29 @@ thread.start()
 buzzer=Buzzer(12)
 
 try:
-    with open('logpipe','r') as fifo:
-      logging.info('Ciapasonde started')
-      for line in fifo:
-        try:
-          a=line.split()
-          id=a[1]
-          frame=a[2]
-          lat=a[5]
-          lng=a[6]
-          alt=a[7].replace('m','')
-          vel=a[8].replace('km/h','')
-          clb=a[10].replace('m/s','')
-          v=a[12]
-          snr=a[13].replace('dBm','')
-          logging.info(f'id={id} frame={frame} lat={lat} lng={lng} alt={alt} vel={vel} clb={clb} v={v} snr={snr}')
-          disp.lat=lat
-          disp.lng=lng
-          disp.id=id
-          disp.alt=alt
-          disp.update()
-          if not mute:
-            buzzer.beep()
-        except:
-          logging.info('errore analisi: '+line.strip())
+  with open('logpipe','r') as fifo:
+    logging.info('Ciapasonde started')
+    for line in fifo:
+      try:
+        a=line.split()
+        id=a[1]
+        frame=a[2]
+        lat=a[5]
+        lng=a[6]
+        alt=a[7].replace('m','')
+        vel=a[8].replace('km/h','')
+        clb=a[10].replace('m/s','')
+        v=a[12]
+        snr=a[13].replace('dBm','')
+        logging.info(f'id={id} frame={frame} lat={lat} lng={lng} alt={alt} vel={vel} clb={clb} v={v} snr={snr}')
+        disp.lat=lat
+        disp.lng=lng
+        disp.id=id
+        disp.alt=alt
+        disp.update()
+        if not mute:
+          buzzer.beep()
+      except:
+        logging.info('errore analisi: '+line.strip())
 except KeyboardInterrupt:
-    stop(0,0)
+  stop(0,0)
