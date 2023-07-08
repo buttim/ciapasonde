@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import time
+import time, signal
 import serial
 import threading
 import logging
@@ -17,6 +17,14 @@ class TipoSonda(Enum):
   PIL=4
   DFM=5
   C50=6
+
+def stop(signum, frame):
+  disp.close()
+  GPIO.cleanup()
+  logging.info('Ciapasonde stopped')
+  exit(0)
+
+signal.signal(signal.SIGTERM, stop)
 
 ver='CIAPA-0.0'
 type=1
@@ -176,5 +184,4 @@ try:
         except:
           logging.info('errore analisi: '+line.strip())
 except KeyboardInterrupt:
-    disp.close()
-    logging.info('Ciapasonde stopped')
+    stop()
