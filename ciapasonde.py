@@ -1,10 +1,6 @@
 #!/usr/bin/python
 
-import time
-import serial
-import threading
-import logging
-import socket
+import time, signal, serial, threading, logging, socket
 from display import Display
 from buzzer import Buzzer
 from enum import Enum
@@ -17,6 +13,13 @@ class TipoSonda(Enum):
   PIL=4
   DFM=5
   C50=6
+
+def stop(signum, frame):
+  disp.close()
+  logging.info('Ciapasonde stopped')
+  exit(0)
+
+signal.signal(signal.SIGTERM, stop)
 
 ver='CIAPA-0.0'
 type=1
@@ -76,9 +79,7 @@ def writeSDRconfig():
       file.write(getSDRconfig(type,freq)+'\r\n')
 
 def process(s):
-    global freq
-    global type
-    global mute
+    global freq,type,mute,ver
     
     s=s.strip()
     if not s.startswith('o{'):
@@ -88,29 +89,35 @@ def process(s):
     s=s[2:-2]
     a=s.split('/')
     for cmd in a:
-        c=cmd.split('=')
-        if len(c)!=2:
-            logging.warning('Malformed command "'+cmd+'"')
+      if cmd=='?':
+        return f'3/{TipoSonda(type).name}/{freq}/0/0/0/0/0/0/0/0/0/CIAPA/0/0/0/0/0/0/0/0/{ver}/o\r\n'
+      c=cmd.split('=')
+      if len(c)!=2:
+          logging.warning('Malformed command "'+cmd+'"')
+      else:
+        if c[0]=='tipo':
+          try:
+            type=int(c[1])
+            disp.type=TipoSonda(type).name
+            disp.update()
+            logging.info('New type: '+str(type))
+            writeSDRconfig()
+          except:
+            logging.warning('Bad argument for t command ('+c[1]+')')
+        elif c[0]=='f':
+          try:
+            freq=float(c[1])
+            logging.info('New frequency: '+str(freq))
+            disp.freq=str(freq)
+            disp.update()
+            writeSDRconfig()
+          except:
+              logging.warning('Bad argument for f command ('+c[1]+')')
+        elif c[0]=='mute':
+          mute=c[1]=='1'
+          logging.info(f'Mute: {mute}')
         else:
-            if c[0]=='tipo':
-              try:
-                type=int(c[1])
-                logging.info('New type: '+str(type))
-              except:
-                logging.warning('Bad argument for t command ('+c[1]+')')
-              writeSDRconfig()
-            elif c[0]=='f':
-              try:
-                  freq=float(c[1])
-                  logging.info('New frequency: '+str(freq))
-              except:
-                  logging.warning('Bad argument for f command ('+c[1]+')')
-              writeSDRconfig()
-            elif c[0]=='mute':
-                mute=c[1]=='1'
-                logging.info(f'Mute: {mute}')
-            else:
-                logging.warning(f'Unrecognized command "{c[0]}"')
+          logging.warning(f'Unrecognized command "{c[0]}"')
     return ''
     
 def threadFunc():
@@ -119,6 +126,8 @@ def threadFunc():
     try:
         with serial.Serial("/dev/rfcomm0",115200,timeout=1) as ser:
           logging.info('Serial connected')
+          disp.connected=True
+          disp.update()
           connected=True
           ser.timeout=1
           while True:
@@ -135,6 +144,8 @@ def threadFunc():
     except serial.SerialException:
       if connected:
         connected=False
+        disp.connected=False
+        disp.update()
         logging.info("Serial disconnected")
       time.sleep(1)
       disp.ip=get_local_ip()
@@ -176,5 +187,4 @@ try:
         except:
           logging.info('errore analisi: '+line.strip())
 except KeyboardInterrupt:
-    disp.close()
-    logging.info('Ciapasonde stopped')
+    stop(0,0)

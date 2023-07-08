@@ -35,8 +35,10 @@ In /etc/rc.local aggiungere prima di `exit 0`:
 ```
 bluetoothctl discoverable-timeout 0
 bluetoothctl discoverable on
-sudo rfcomm watch hci0 &
-sudo -u pi screen -S ciapa ~pi/ciapasonde/ciapasonde.py
+rfcomm watch hci0 &
+
+cd ~pi/ciapasonde/
+sudo -u pi screen -d -m -S ciapasonde ./ciapasonde.py
 ```
 
 

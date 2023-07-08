@@ -34,21 +34,24 @@ class Display:
 
     self.ip='?.?.?.?'
     self.id='????????'
+    self.type='RS41'
     self.freq=403.0
     self.lat=0
     self.lng=0
     self.alt=0
+    self.connected=False
 
   def update(self):
     self.draw.rectangle((0, 0, self.disp.width, self.disp.height), fill=(0, 0, 255))
     self.draw.text((5,0),f"{self.id}",font=self.font,fill=(0,0,0))
-    self.draw.text((5,20),f"{self.freq}MHz",font=self.font,fill=(0,0,0))
+    self.draw.text((5,20),f"{self.type}@{self.freq}",font=self.font,fill=(0,0,0))
     self.draw.text((5,40),f"{self.lat}",font=self.font,fill=(0,0,0))
     self.draw.text((5,55),f"{self.lng}",font=self.font,fill=(0,0,0))
     self.draw.text((5,75),f"{self.alt}m",font=self.font,fill=(0,0,0))
-    self.draw.text((5,115),f"IP {self.ip}",font=self.fontSmall,fill=(0,0,0))
+    self.draw.text((5,115),f"IP {self.ip}     {'(BT)' if self.connected else ''}",font=self.fontSmall,fill=(0,0,0))
     self.disp.display(self.img)
 
   def close(self):
     self.disp.reset();
     GPIO.output(23, GPIO.LOW)
+    GPIO.cleanup()
