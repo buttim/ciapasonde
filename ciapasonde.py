@@ -16,7 +16,6 @@ class TipoSonda(Enum):
 
 def stop(signum, frame):
   disp.close()
-  GPIO.cleanup()
   logging.info('Ciapasonde stopped')
   exit(0)
 
@@ -77,7 +76,21 @@ def btMessage():
 def writeSDRconfig():
   global type, freq
   with open('sdr_config.txt','w') as file:
+      file.write(f'#{TipoSonda(type).name}\r\n')
       file.write(getSDRconfig(type,freq)+'\r\n')
+
+
+def readSDRconfig():
+  global type, freq
+  try:
+    with open('sdr_config.txt','r') as file:
+      s=file.readline().strip()
+      type=TipoSonda[s[1:]].value
+      s=file.readline().strip()
+      freq=float(s.split(' ')[1])
+  except:
+    type=1
+    freq=403.0
 
 def process(s):
     global freq,type,mute,ver
@@ -101,14 +114,14 @@ def process(s):
             type=int(c[1])
             disp.type=TipoSonda(type).name
             disp.update()
-            logging.info('New type: '+str(type))
+            logging.debug('New type: '+str(type))
             writeSDRconfig()
           except:
             logging.warning('Bad argument for t command ('+c[1]+')')
         elif c[0]=='f':
           try:
             freq=float(c[1])
-            logging.info('New frequency: '+str(freq))
+            logging.debug('New frequency: '+str(freq))
             disp.freq=str(freq)
             disp.update()
             writeSDRconfig()
@@ -116,7 +129,7 @@ def process(s):
               logging.warning('Bad argument for f command ('+c[1]+')')
         elif c[0]=='mute':
           mute=c[1]=='1'
-          logging.info(f'Mute: {mute}')
+          logging.debug(f'Mute: {mute}')
         else:
           logging.warning(f'Unrecognized command "{c[0]}"')
     return ''
@@ -135,7 +148,7 @@ def threadFunc():
             line=ser.readline()
             if line:
                 s=line.decode('utf-8').strip()
-                logging.info('Received: '+s)
+                logging.debug('Received: '+s)
                 s=process(s)
                 if s!='':
                     ser.write(s.encode('utf-8'))
@@ -151,6 +164,8 @@ def threadFunc():
       time.sleep(1)
       disp.ip=get_local_ip()
       disp.update()
+
+readSDRconfig()
 
 disp=Display()
 disp.ip=get_local_ip()
@@ -186,6 +201,6 @@ try:
         if not mute:
           buzzer.beep()
       except:
-        logging.info('errore analisi: '+line.strip())
+        logging.warning('errore analisi: '+line.strip())
 except KeyboardInterrupt:
   stop(0,0)
