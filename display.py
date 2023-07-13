@@ -82,18 +82,21 @@ class Display:
     self.draw.text((5,115),f"IP {self.ip}     {'(BT)' if self.connected else ''}",font=self.fontSmall,fill=(0,0,0))
     self.disp.display(self.img)
 
-  def ask(self,prompt1,prompt2,button1,button2):
+  def ask(self,prompt1,prompt2,txtButton1,txtButton2):
+    global button1, button2
     self.asking=True
     self.draw.rectangle((0, 0, self.disp.width, self.disp.height), fill=(0, 255, 255))
     self.draw.text((5,45),prompt1,font=self.fontSmall,fill=(0,0,0))
     self.draw.text((5,65),prompt2,font=self.font,fill=(0,0,0))
-    w,h=self.draw.textsize(button1,self.font)
-    self.draw.text((self.disp.width-w-4,20-h/2),button1,font=self.font,fill=(0,0,0))
-    w,h=self.draw.textsize(button2,self.font)
-    self.draw.text((self.disp.width-w-4,self.disp.height-20-h/2),button2,font=self.font,fill=(0,0,0))
+    w,h=self.draw.textsize(txtButton1,self.font)
+    self.draw.text((self.disp.width-w-4,20-h/2),txtButton1,font=self.font,fill=(0,0,0))
+    w,h=self.draw.textsize(txtButton2,self.font)
+    self.draw.text((self.disp.width-w-4,self.disp.height-20-h/2),txtButton2,font=self.font,fill=(0,0,0))
     self.disp.display(self.img)
     res = buttonInput()
     self.asking=False
+    button1=False
+    button2=False
     return res
 
   def testButton2(self):
