@@ -58,7 +58,6 @@ def getSDRconfig(tipo,freq):
   else:
     return f'f {freq} 5 70 0 12000'
 
-
 def btMessage():
   global type, freq, snr, bat, batv, mute, ver, lat, lng, alt, vel
   if id=='':
@@ -78,7 +77,6 @@ def writeSDRconfig():
   with open('sdr_config.txt','w') as file:
       file.write(f'#{TipoSonda(type).name}\r\n')
       file.write(getSDRconfig(type,freq)+'\r\n')
-
 
 def readSDRconfig():
   global type, freq
@@ -137,9 +135,10 @@ def process(s):
 def threadFunc():
   connected=False
   while True:
-    if disp.testButton1():
+    if disp.testButton2():
       if disp.ask('Shutdown?','','yes','no'):
         os.system('sudo shutdown 0')
+        ask('','SHUTDOWN','','')
     try:
         with serial.Serial("/dev/rfcomm0",115200,timeout=1) as ser:
           logging.info('Serial connected')

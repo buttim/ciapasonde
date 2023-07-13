@@ -96,10 +96,10 @@ class Display:
     self.asking=False
     return res
 
-  def testButton1(self):
-    global button1
-    res=button1
-    button1=False
+  def testButton2(self):
+    global button2
+    res=button2
+    button2=False
     return res
 
   def close(self):
