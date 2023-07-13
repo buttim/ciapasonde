@@ -8,6 +8,9 @@ import RPi.GPIO as GPIO
 import time
 
 
+button1=False
+button2=False
+
 def onButton2(channel):
   global button2
   button2=True
@@ -91,6 +94,12 @@ class Display:
     self.disp.display(self.img)
     res = buttonInput()
     self.asking=False
+    return res
+
+  def testButton1(self):
+    global button1
+    res=button1
+    button1=False
     return res
 
   def close(self):

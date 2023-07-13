@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import time, signal, serial, threading, logging, socket
+import os, time, signal, serial, threading, logging, socket
 from display import Display
 from buzzer import Buzzer
 from enum import Enum
@@ -137,6 +137,9 @@ def process(s):
 def threadFunc():
   connected=False
   while True:
+    if disp.testButton1():
+      if disp.ask('Shutdown?','','yes','no'):
+        os.system('sudo shutdown 0')
     try:
         with serial.Serial("/dev/rfcomm0",115200,timeout=1) as ser:
           logging.info('Serial connected')
