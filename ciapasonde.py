@@ -4,7 +4,7 @@ import time, signal, serial, threading, logging, socket
 from display import Display
 from buzzer import Buzzer
 from enum import Enum
-
+from bt import startBTThread
 
 class TipoSonda(Enum):
   RS41=1
@@ -176,6 +176,8 @@ thread=threading.Thread(target=threadFunc,daemon=True)
 thread.start()
 
 buzzer=Buzzer(12)
+
+startBTThread(disp)
 
 try:
   with open('logpipe','r') as fifo:
