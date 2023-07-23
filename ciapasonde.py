@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os, time, signal, serial, threading, logging, socket
+from subprocess import check_output
 from display import Display
 from buzzer import Buzzer
 from enum import Enum
@@ -137,8 +138,18 @@ def threadFunc():
   while True:
     if disp.testButton2():
       if disp.ask('Shutdown?','','yes','no'):
-        os.system('sudo shutdown 0')
-        ask('','SHUTDOWN','','')
+        while os.system('killall -9 sdrtst')==0:
+          pass
+        try:
+          pid=int(check_output(['pidof','rtl_tcp']).decode('utf-8').strip())
+          logging.info(f'PID rtl_tcp: {pid}')
+          os.kill(pid,signal.SIGINT)
+          os.kill(pid,signal.SIGINT)
+          os.kill(pid,signal.SIGINT)
+        except:
+          pass
+        os.system('sudo shutdown 0 &')
+        disp.ask('','SHUTDOWN','','')
     try:
         with serial.Serial("/dev/rfcomm0",115200,timeout=1) as ser:
           logging.info('Serial connected')
@@ -163,7 +174,7 @@ def threadFunc():
         disp.connected=False
         disp.update()
         logging.info("Serial disconnected")
-      time.sleep(1)
+      time.sleep(.2)
       disp.ip=get_local_ip()
       disp.update()
 
