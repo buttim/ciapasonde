@@ -77,6 +77,7 @@ def writeSDRconfig():
   global type, freq
   with open('sdr_config.txt','w') as file:
       file.write(f'#{TipoSonda(type).name}\r\n')
+      file.write('p 8 1\r\n')
       file.write(getSDRconfig(type,freq)+'\r\n')
 
 def readSDRconfig():
@@ -86,8 +87,10 @@ def readSDRconfig():
       s=file.readline().strip()
       type=TipoSonda[s[1:]].value
       s=file.readline().strip()
+      s=file.readline().strip()
       freq=float(s.split(' ')[1])
-  except:
+  except Exception as e:
+    logging.error(e)
     type=1
     freq=403.0
 
@@ -181,6 +184,8 @@ def threadFunc():
 readSDRconfig()
 
 disp=Display()
+disp.freq=freq
+disp.type=TipoSonda(type).name
 disp.ip=get_local_ip()
 disp.update()
 
