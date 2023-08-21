@@ -202,25 +202,40 @@ try:
     logging.info('Ciapasonde started')
     for line in fifo:
       try:
+        logging.info(line)
         a=line.split()
         id=a[1]
-        frame=a[2]
-        lat=a[5]
-        lng=a[6]
-        alt=a[7].replace('m','')
-        vel=a[8].replace('km/h','')
-        clb=a[10].replace('m/s','')
-        v=a[12]
-        snr=a[13].replace('dBm','')
-        logging.info(f'id={id} frame={frame} lat={lat} lng={lng} alt={alt} vel={vel} clb={clb} v={v} snr={snr}')
-        disp.lat=lat
-        disp.lng=lng
         disp.id=id
-        disp.alt=alt
+        if a[0]=='R41':
+          frame=a[2]
+          lat=a[5]
+          lng=a[6]
+          alt=a[7].replace('m','')
+          vel=a[8].replace('km/h','')
+          clb=a[10].replace('m/s','')
+          v=a[12]
+          snr=a[13].replace('dB','')
+          logging.info(f'id={id} frame={frame} lat={lat} lng={lng} alt={alt} vel={vel} clb={clb} v={v} snr={snr}')
+          disp.lat=lat
+          disp.lng=lng
+          disp.alt=alt
+        elif a[0]=='C50':
+          logging.info(line)
+          snr=a[2]
+          if 'lat'==a[-2]:
+            lat=a[-1].strip(']')
+            disp.lat=lat
+          elif 'long'==a[-2]:
+            lng=a[-1]
+            disp.lng=lng.strip(']')
+          elif 'alti'==a[-2]:
+            alt=a[-1].strip('m]')
+            disp.alt=alt
+        logging.info(f'id={id} lat={lat} lng={lng} alt={alt}')
         disp.update()
         if not mute:
           buzzer.beep()
-      except:
-        logging.warning('errore analisi: '+line.strip())
+      except Exception as ex:
+        logging.warning('errore analisi: '+str(ex)+'['+line.strip()+']')
 except KeyboardInterrupt:
   stop(0,0)
