@@ -93,8 +93,6 @@ class Agent(dbus.service.Object):
     #TODO
     print("Cancel")
 
-
-
 def btThread(display):
   global disp, bus, adapter
 
