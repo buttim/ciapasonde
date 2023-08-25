@@ -67,11 +67,13 @@ def btMessage():
     bk=0
     bktime=0
     if lat==0 and lng==0:
+        res=f'2/{TipoSonda(type).name}/{freq}/{id}/S{snr}/{bat}/{afc}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
         id=''
-        return f'2/{TipoSonda(type).name}/{freq}/{id}/S{snr}/{bat}/{afc}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
+        return res
     else:
+        res=f'1/{TipoSonda(type).name}/{freq}/{id}/{lat}/{lng}/{alt}/{vel}/{snr}/{bat}/{afc}/{bk}/{bktime}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
         id=''
-        return f'1/{TipoSonda(type).name}/{freq}/{id}/{lat}/{lng}/{alt}/{vel}/{snr}/{bat}/{afc}/{bk}/{bktime}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
+        return res
 
 def process(s):
     global freq,type,mute,ver
@@ -143,7 +145,9 @@ def threadFunc():
                     ser.write(s.encode('utf-8'))
             else:
               time.sleep(1)
-            ser.write(btMessage().encode('utf-8'))
+            msg=btMessage().encode('utf-8')
+            logging.info(msg)
+            ser.write(msg)
     except serial.SerialException:
         if connected:
             connected=False
