@@ -14,15 +14,31 @@ class TipoSonda(Enum):
   PIL=4
   DFM=5
   C50=6
+  IMET4=7
   
 def sondedumpType(t):
-    if t==2 or t==3 or t==4: return 'm10'
-    if t==5: return 'dfm'
-    if t==6: return 'c50'
-    return 'rs41'
+  if t==2 or t==4: return 'm10'
+  return TipoSonda(t).name
+
+def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+  ps_command = Popen("ps -o pid --ppid %d --noheaders" % parent_pid, shell=True, stdout=PIPE)
+  ps_output = ps_command.stdout.read().decode()
+  retcode = ps_command.wait()
+  assert retcode == 0, "ps command returned %d" % retcode
+  for pid_str in ps_output.split("\n")[:-1]:
+    os.kill(int(pid_str), sig)
 
 def stop(signum, frame):
-  disp.close()
+  global proc1, terminate, restart
+  restart =True
+  terminate=True
+  logging.info(f'Terminating {proc1.pid} rtl_fm process')
+  kill_child_processes(proc1.pid)
+  os.kill(proc1.pid,signal.SIGTERM)
+  try:
+    disp.close()
+  except:
+    pass
   logging.info('Ciapasonde stopped')
   exit(0)
 
@@ -34,7 +50,7 @@ freq=403.7
 bat=0
 batv=0
 mute=False
-
+terminate=False
 id=''
 lat=0
 lng=0
@@ -67,13 +83,13 @@ def btMessage():
     bk=0
     bktime=0
     if lat==0 and lng==0:
-        res=f'2/{TipoSonda(type).name}/{freq}/{id}/S{snr}/{bat}/{afc}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
-        id=''
-        return res
+      res=f'2/{TipoSonda(type).name}/{freq}/{id}/S{snr}/{bat}/{afc}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
+      id=''
+      return res
     else:
-        res=f'1/{TipoSonda(type).name}/{freq}/{id}/{lat}/{lng}/{alt}/{vel}/{snr}/{bat}/{afc}/{bk}/{bktime}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
-        id=''
-        return res
+      res=f'1/{TipoSonda(type).name}/{freq}/{id}/{lat}/{lng}/{alt}/{vel}/{snr}/{bat}/{afc}/{bk}/{bktime}/{batv}/{1 if mute else 0}/0/0/0/{ver}/o\r\n'
+      id=''
+      return res
 
 def process(s):
     global freq,type,mute,ver
@@ -118,8 +134,9 @@ def process(s):
     return ''
     
 def threadFunc():
+  global terminate, disp
   connected=False
-  while True:
+  while not terminate:
     if disp.testButton2():
       if disp.ask('Shutdown?','','yes','no'):
         os.system('sudo shutdown 0 &')
@@ -138,25 +155,27 @@ def threadFunc():
                 disp.ask('','SHUTDOWN','','')
             line=ser.readline()
             if line:
-                s=line.decode('utf-8').strip()
-                logging.debug('Received: '+s)
-                s=process(s)
-                if s!='':
-                    ser.write(s.encode('utf-8'))
+              s=line.decode('utf-8').strip()
+              logging.debug('Received: '+s)
+              s=process(s)
+              if s!='':
+                ser.write(s.encode('utf-8'))
             else:
               time.sleep(1)
             msg=btMessage().encode('utf-8')
             logging.info(msg)
             ser.write(msg)
     except serial.SerialException:
-        if connected:
-            connected=False
-            disp.connected=False
-            disp.update()
-            logging.info("Serial disconnected")
-        time.sleep(.2)
-        disp.ip=get_local_ip()
+      if connected:
+        connected=False
+        disp.connected=False
         disp.update()
+        logging.info("Serial disconnected")
+      time.sleep(.2)
+      disp.ip=get_local_ip()
+      disp.update()
+    except:
+      pass
 
 disp=Display()
 disp.freq=freq
@@ -173,18 +192,19 @@ buzzer=Buzzer(12)
 startBTThread(disp)
 
 try:
-    while True:
+    while not terminate:
         try:
-            with open('freq.txt','r') as f:
-                freq=float(f.read().rstrip())
+          with open('freq.txt','r') as f:
+            freq=float(f.read().rstrip())
         except:
-            freq=405.95
+          freq=405.95
         disp.freq=freq
         disp.update()
         logging.info(f'freq: {freq}')
 
         proc1=Popen(f"rtl_fm -f {freq}M | ffmpeg -f s16le -ar 24000 -ac 1 -i - -y fm.wav 2> /dev/null",shell=True)
-        with Popen(["stdbuf","-o0","sondedump","-t",sondedumpType(type),"-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
+        #with Popen(["stdbuf","-o0","sondedump","-t",sondedumpType(type),"-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
+        with Popen(["stdbuf","-o0","sondedump","-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
             logging.info('Ciapasonde started')
             while not restart:
                 line=proc.stdout.readline()

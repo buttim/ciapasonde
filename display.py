@@ -81,7 +81,10 @@ class Display:
     self.draw.text((5,55),f"{self.lng}",font=self.font,fill=(0,0,0))
     self.draw.text((5,75),f"{self.alt}m",font=self.font,fill=(0,0,0))
     self.draw.text((5,115),f"IP {self.ip}     {'(BT)' if self.connected else ''}",font=self.fontSmall,fill=(0,0,0))
-    self.disp.display(self.img)
+    try:
+      self.disp.display(self.img)
+    except:
+      pass
     self.lock.release()
     
   def ask(self,prompt1,prompt2,txtButton1,txtButton2):
