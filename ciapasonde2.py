@@ -141,6 +141,7 @@ def threadFunc():
       if disp.ask('Shutdown?','','yes','no'):
         os.system('sudo shutdown 0 &')
         disp.ask('','SHUTDOWN','','')
+        stop(0,0)
     try:
         with serial.Serial("/dev/rfcomm0",115200,timeout=1) as ser:
           logging.info('Serial connected')
@@ -153,6 +154,7 @@ def threadFunc():
               if disp.ask('Shutdown?','','yes','no'):
                 os.system('sudo shutdown 0 &')
                 disp.ask('','SHUTDOWN','','')
+                stop(0,0)
             line=ser.readline()
             if line:
               s=line.decode('utf-8').strip()
