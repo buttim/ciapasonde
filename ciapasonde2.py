@@ -104,7 +104,7 @@ def btMessage():
       return res
 
 def process(s):
-    global freq,type,mute,ver
+    global freq,type,mute,ver,restart
     
     s=s.strip()
     if not s.startswith('o{'):
@@ -145,6 +145,7 @@ def process(s):
           logging.debug(f'Mute: {mute}')
         else:
           logging.warning(f'Unrecognized command "{c[0]}"')
+    if restart: kill_child_processes(proc1.pid)
     return ''
     
 def threadFunc():
@@ -198,7 +199,7 @@ disp.type=TipoSonda(type).name
 disp.ip=get_local_ip()
 disp.update()
 
-logging.basicConfig(format="%(asctime)s: %(message)s",level=logging.INFO,datefmt="%H:%M:%S")
+logging.basicConfig(format="%(asctime)s: %(message)s",level=logging.DEBUG,datefmt="%H:%M:%S")
 thread=threading.Thread(target=threadFunc,daemon=True)
 thread.start()
 
