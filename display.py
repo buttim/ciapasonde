@@ -6,31 +6,35 @@ from PIL import ImageDraw
 from PIL import ImageFont
 import RPi.GPIO as GPIO
 
+
 HAT=1
 if HAT:
-	RST=27
-	DC=25
-	BACKLIGHT=24
-	ROTATION=90
-	WIDTH=128
-	HEIGHT=128
-	BTN1=21
-	BTN2=20
-	BTN3=16
+  OFFSET_LEFT=2
+  OFFSET_TOP=3
+  RST=27
+  DC=25
+  BACKLIGHT=24
+  ROTATION=90
+  WIDTH=128
+  HEIGHT=128
+  BTN1=21
+  BTN2=20
+  BTN3=16
 else:
-	RST=24
-	DC=25
-	BACKLIGHT=23
-	ROTATION=270
-	WIDTH=128
-	HEIGHT=160
-	BTN1=5
-	BTN2=6
-	BTN3=6
+  OFFSET_LEFT=0
+  OFFSET_TOP=0
+  RST=24
+  DC=25
+  BACKLIGHT=23
+  ROTATION=270
+  WIDTH=128
+  HEIGHT=160
+  BTN1=5
+  BTN2=6
+  BTN3=6
 
 button1=False
 button2=False
-
 def onButton2(channel):
   global button2
   button2=True
@@ -58,10 +62,10 @@ class Display:
       rotation=ROTATION,
       spi_speed_hz=4000000,
       invert=False,
-      offset_left=0,
-      offset_top=0,
+      offset_left=OFFSET_LEFT,
+      offset_top=OFFSET_TOP,
       width=WIDTH,
-      height=WIDTH
+      height=HEIGHT
     )
     self.disp.begin()
     self.img = Image.new('RGB', (self.disp.width,self.disp.height), color=(255, 0, 0))
@@ -132,6 +136,7 @@ class Display:
     return res
 
   def close(self):
-    self.disp.reset();
-    GPIO.output(23, GPIO.LOW)
+    GPIO.setup(BACKLIGHT,GPIO.OUT)
+    GPIO.output(BACKLIGHT, GPIO.LOW)
+    self.disp.reset()
     GPIO.cleanup()

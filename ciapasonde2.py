@@ -24,7 +24,7 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
   ps_command = Popen("ps -o pid --ppid %d --noheaders" % parent_pid, shell=True, stdout=PIPE)
   ps_output = ps_command.stdout.read().decode()
   retcode = ps_command.wait()
-  assert retcode == 0, "ps command returned %d" % retcode
+  if retcode!=0: return
   for pid_str in ps_output.split("\n")[:-1]:
     os.kill(int(pid_str), sig)
 
@@ -32,15 +32,27 @@ def stop(signum, frame):
   global proc1, terminate, restart
   restart =True
   terminate=True
-  logging.info(f'Terminating {proc1.pid} rtl_fm process')
   kill_child_processes(proc1.pid)
   os.kill(proc1.pid,signal.SIGTERM)
-  try:
-    disp.close()
-  except:
-    pass
+  disp.close()
   logging.info('Ciapasonde stopped')
   exit(0)
+
+def writeConfig():
+  global type, freq
+  with open("freq.txt","w") as f:
+      f.write(f'{TipoSonda(type).name} {freq}')
+
+def readConfig():
+  global type, freq
+  try:
+      with open('freq.txt','r') as f:
+        a=f.read().rstrip().split()
+        type=TipoSonda[a[0]].value
+        freq=float(a[1])
+  except:
+      type=1
+      freq=403
 
 signal.signal(signal.SIGTERM, stop)
 
@@ -114,7 +126,8 @@ def process(s):
             disp.type=TipoSonda(type).name
             disp.update()
             logging.debug('New type: '+str(type))
-            #TODO writeSDRconfig()
+            writeConfig()
+            restart=True
           except:
             logging.warning('Bad argument for t command ('+c[1]+')')
         elif c[0]=='f':
@@ -123,6 +136,7 @@ def process(s):
             logging.debug('New frequency: '+str(freq))
             disp.freq=str(freq)
             disp.update()
+            writeConfig()
             restart=True
           except:
               logging.warning('Bad argument for f command ('+c[1]+')')
@@ -165,7 +179,6 @@ def threadFunc():
             else:
               time.sleep(1)
             msg=btMessage().encode('utf-8')
-            logging.info(msg)
             ser.write(msg)
     except serial.SerialException:
       if connected:
@@ -195,18 +208,15 @@ startBTThread(disp)
 
 try:
     while not terminate:
-        try:
-          with open('freq.txt','r') as f:
-            freq=float(f.read().rstrip())
-        except:
-          freq=405.95
+        readConfig()
+        disp.type=TipoSonda(type).name
         disp.freq=freq
         disp.update()
         logging.info(f'freq: {freq}')
 
         proc1=Popen(f"rtl_fm -f {freq}M | ffmpeg -f s16le -ar 24000 -ac 1 -i - -y fm.wav 2> /dev/null",shell=True)
-        #with Popen(["stdbuf","-o0","sondedump","-t",sondedumpType(type),"-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
-        with Popen(["stdbuf","-o0","sondedump","-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
+        with Popen(["stdbuf","-o0","sondedump","-t",sondedumpType(type),"-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
+        #with Popen(["stdbuf","-o0","sondedump","-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
             logging.info('Ciapasonde started')
             while not restart:
                 line=proc.stdout.readline()
