@@ -118,9 +118,11 @@ class Display:
     self.draw.rectangle((0, 0, self.disp.width, self.disp.height), fill=(0, 255, 255))
     self.draw.text((5,45),prompt1,font=self.fontSmall,fill=(0,0,0))
     self.draw.text((5,65),prompt2,font=self.font,fill=(0,0,0))
-    w,h=self.draw.textsize(txtButton1,self.font)
+    w=self.draw.textlength(txtButton1,self.font)
+    h=16
     self.draw.text((self.disp.width-w-4,20-h/2),txtButton1,font=self.font,fill=(0,0,0))
-    w,h=self.draw.textsize(txtButton2,self.font)
+    w=self.draw.textlength(txtButton2,self.font)
+    h=16
     self.draw.text((self.disp.width-w-4,self.disp.height-20-h/2),txtButton2,font=self.font,fill=(0,0,0))
     self.disp.display(self.img)
     res = buttonInput()
