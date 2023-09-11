@@ -215,7 +215,7 @@ try:
         disp.update()
         logging.info(f'freq: {freq}')
 
-        proc1=Popen(f"rtl_fm -f {freq}M | ffmpeg -f s16le -ar 24000 -ac 1 -i - -y fm.wav 2> /dev/null",shell=True)
+        proc1=Popen(f"rtl_fm -E dc -A lut -s 48k -f {freq}M | ffmpeg -f s16le -ar 48000 -ac 1 -i - -y fm.wav 2> /dev/null",shell=True)
         with Popen(["stdbuf","-o0","sondedump","-t",sondedumpType(type),"-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
         #with Popen(["stdbuf","-o0","sondedump","-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
             logging.info('Ciapasonde started')
