@@ -20,6 +20,11 @@ if HAT:
   BTN1=21
   BTN2=20
   BTN3=16
+  PRESS=13 #joystick
+  LEFT=5
+  UP=6
+  RIGHT=26
+  DOWN=19
 else:
   OFFSET_LEFT=0
   OFFSET_TOP=0
@@ -74,7 +79,7 @@ class Display:
       height=HEIGHT
     )
     self.disp.begin()
-    self.img = Image.new('RGB', (self.disp.width,self.disp.height), color=(255, 0, 0))
+    self.img = Image.new('RGB', (self.disp.width,self.disp.height), color=(0, 0, 255))
 
     self.draw = ImageDraw.Draw(self.img)
 
@@ -108,7 +113,7 @@ class Display:
   def update(self):
     if self.asking: return
     self.lock.acquire()
-    self.draw.rectangle((0, 0, self.disp.width, self.disp.height), fill=(255, 0, 0))
+    self.draw.rectangle((0, 0, self.disp.width, self.disp.height), fill=(0,255,255))
     self.draw.text((5,0),f"{self.id}",font=self.font,fill=(0,0,0))
     self.draw.text((5,20),f"{self.type}@{self.freq}",font=self.font,fill=(0,0,0))
     self.draw.text((5,40),f"{self.lat}",font=self.font,fill=(0,0,0))
@@ -125,7 +130,7 @@ class Display:
     global button1, button2
 
     self.asking=True
-    self.draw.rectangle((0, 0, self.disp.width, self.disp.height), fill=(0, 255, 255))
+    self.draw.rectangle((0, 0, self.disp.width, self.disp.height), fill=(255, 255, 0))
     self.draw.text((5,45),prompt1,font=self.fontSmall,fill=(0,0,0))
     self.draw.text((5,65),prompt2,font=self.font,fill=(0,0,0))
     w=self.draw.textlength(txtButton1,self.font)

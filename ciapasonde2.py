@@ -20,20 +20,25 @@ def sondedumpType(t):
   if t==2 or t==4: return 'm10'
   return TipoSonda(t).name
 
-def kill_child_processes(parent_pid, sig=signal.SIGTERM):
-  ps_command = Popen("ps -o pid --ppid %d --noheaders" % parent_pid, shell=True, stdout=PIPE)
-  ps_output = ps_command.stdout.read().decode()
-  retcode = ps_command.wait()
-  if retcode!=0: return
-  for pid_str in ps_output.split("\n")[:-1]:
-    os.kill(int(pid_str), sig)
+#def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+#  ps_command = Popen("ps -o pid --ppid %d --noheaders" % parent_pid, shell=True, stdout=PIPE)
+#  ps_output = ps_command.stdout.read().decode()
+#  retcode = ps_command.wait()
+#  if retcode!=0: return
+#  for pid_str in ps_output.split("\n")[:-1]:
+#    os.kill(int(pid_str), sig)
 
 def stop(signum, frame):
   global proc1, terminate, restart
   restart =True
   terminate=True
-  kill_child_processes(proc1.pid)
-  os.kill(proc1.pid,signal.SIGTERM)
+  #kill_child_processes(proc1.pid)
+  #os.kill(proc1.pid,signal.SIGTERM)
+  try:
+    proc1.send_signal(signal.SIGTERM)
+    proc2.send_signal(signal.SIGTERM)
+  except:
+    pass
   disp.close()
   logging.info('Ciapasonde stopped')
   exit(0)
@@ -145,7 +150,13 @@ def process(s):
           logging.debug(f'Mute: {mute}')
         else:
           logging.warning(f'Unrecognized command "{c[0]}"')
-    if restart: kill_child_processes(proc1.pid)
+    if restart:
+      #kill_child_processes(proc1.pid)
+      try:
+        proc1.send_signal(signal.SIGTERM)
+        proc2.send_signal(signal.SIGTERM)
+      except:
+        pass
     return ''
     
 def threadFunc():
