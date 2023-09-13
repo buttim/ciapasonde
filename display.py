@@ -35,6 +35,12 @@ else:
 
 button1=False
 button2=False
+button3=False
+
+def onButton3(channel):
+  global button3
+  button3=True
+
 def onButton2(channel):
   global button2
   button2=True
@@ -78,12 +84,15 @@ class Display:
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(BTN1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(BTN2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BTN3, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     button1=False
     button2=False
+    button3=False
 
     GPIO.add_event_detect(BTN1, GPIO.FALLING, callback=onButton1, bouncetime=200)
     GPIO.add_event_detect(BTN2, GPIO.FALLING, callback=onButton2, bouncetime=200)
+    GPIO.add_event_detect(BTN3, GPIO.FALLING, callback=onButton3, bouncetime=200)
 
     self.ip='?.?.?.?'
     self.id='????????'
@@ -114,6 +123,7 @@ class Display:
     
   def ask(self,prompt1,prompt2,txtButton1,txtButton2):
     global button1, button2
+
     self.asking=True
     self.draw.rectangle((0, 0, self.disp.width, self.disp.height), fill=(0, 255, 255))
     self.draw.text((5,45),prompt1,font=self.fontSmall,fill=(0,0,0))
@@ -129,6 +139,13 @@ class Display:
     self.asking=False
     button1=False
     button2=False
+    button3=False
+    return res
+
+  def testButton3(self):
+    global button3
+    res=button3
+    button3=False
     return res
 
   def testButton2(self):

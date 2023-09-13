@@ -208,6 +208,7 @@ buzzer=Buzzer(12)
 startBTThread(disp)
 
 try:
+    logging.info('Ciapasonde started')
     while not terminate:
         readConfig()
         disp.type=TipoSonda(type).name
@@ -215,10 +216,12 @@ try:
         disp.update()
         logging.info(f'freq: {freq}')
 
-        proc1=Popen(f"rtl_fm -E dc -A lut -s 48k -f {freq}M | ffmpeg -f s16le -ar 48000 -ac 1 -i - -y fm.wav 2> /dev/null",shell=True)
+        #proc1=Popen(f"rtl_fm -E dc -A lut -s 48k -f {freq}M | ffmpeg -f s16le -ar 48000 -ac 1 -i - -y fm.wav 2> /dev/null",shell=True)
+        proc1=Popen(["rtl_fm","-E","dc","-A","lut","-s","48k","-f",f"{freq}M"],stdout=PIPE)
+        proc2=Popen(["ffmpeg","-f","s16le","-ar","48000","-ac","1","-i","-","-y","fm.wav"],
+          stdin=proc1.stdout,stdout=DEVNULL,stderr=DEVNULL)
+        proc1.stdout.close()
         with Popen(["stdbuf","-o0","sondedump","-t",sondedumpType(type),"-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
-        #with Popen(["stdbuf","-o0","sondedump","-f","#%S %l %o %a %c %f","fm.wav"],encoding='utf8',bufsize=0,stdout=PIPE) as proc:
-            logging.info('Ciapasonde started')
             while not restart:
                 line=proc.stdout.readline()
                 if not line: break
