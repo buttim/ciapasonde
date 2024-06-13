@@ -18,6 +18,11 @@ class TipoSonda(Enum):
 def stop(signum, frame):
   disp.close()
   logging.info('Ciapasonde stopped')
+  try:
+    Popen("killall -SIGTERM sdrtst", shell=True)
+    Popen("killall -SIGTERM sondeudp", shell=True)
+  except:
+    pass
   exit(0)
 
 signal.signal(signal.SIGTERM, stop)
@@ -153,6 +158,7 @@ def threadFunc():
           pass
         os.system('sudo shutdown 0 &')
         disp.ask('','SHUTDOWN','','')
+        stop()
     try:
         with serial.Serial("/dev/rfcomm0",115200,timeout=1) as ser:
           logging.info('Serial connected')
@@ -189,7 +195,7 @@ disp.type=TipoSonda(type).name
 disp.ip=get_local_ip()
 disp.update()
 
-logging.basicConfig(format="%(asctime)s: %(message)s",level=logging.INFO,datefmt="%H:%M:%S")
+logging.basicConfig(format="%(asctime)s: %(message)s",level=logging.DEBUG,datefmt="%H:%M:%S")
 thread=threading.Thread(target=threadFunc,daemon=True)
 thread.start()
 
