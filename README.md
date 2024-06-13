@@ -3,6 +3,7 @@
 
 ## Configurazione Bluetooth
 
+[Fonte](https://github.com/ole-vi/bluetooth-server)
 Modificare /etc/systemd/system/dbus-org.bluez.service
 
 Trasformare:
@@ -72,7 +73,7 @@ blacklist dvb_core
 
 
 
-## Installazione `ntmui `(opzionale - richiede monitor e tastiera)
+## Installazione `nmtui `(opzionale - richiede monitor e tastiera)
 
 [Installing Network Manager on Raspberry Pi OS - Pi My Life Up](https://pimylifeup.com/raspberry-pi-network-manager/)
 

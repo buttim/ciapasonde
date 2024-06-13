@@ -107,7 +107,9 @@ def btThread(display):
             "org.freedesktop.DBus.Properties")
   adapter.Set("org.bluez.Adapter1", "Discoverable", True)         
   mac=adapter.Get("org.bluez.Adapter1", "Address")
-  adapter.Set("org.bluez.Adapter1", "Alias",'CiapaSonde'+mac.replace(':',''))
+  btMac=mac.replace(':','')
+  adapter.Set("org.bluez.Adapter1", "Alias",'CiapaSonde'+btMac)
+  disp.btMac=btMac
 
   agent = Agent(bus, path)
   capability='KeyboardDisplay'
