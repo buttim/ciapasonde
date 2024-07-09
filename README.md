@@ -18,7 +18,7 @@ in:
 
 
 ```
-ExecStart=/usr/lib/bluetooth/bluetoothd -C
+ExecStart=/usr/libexec/bluetooth/bluetoothd -C
 ```
 
 
