@@ -39,22 +39,40 @@ bluetoothctl discoverable on
 rfcomm watch hci0 &
 
 cd ~pi/ciapasonde/
-sudo -u pi screen -d -m -S ciapasonde ./ciapasonde.py
+sudo -u pi screen -d -m -S ciapasonde ./bin/python3 ciapasonde2.py
 ```
 
 
 
 ## Software
 
+Abilitare SPI da raspi-config
 
 ```
-    sudo apt install rtl-sdr git libx11-dev libxext-dev libpng-dev libjpeg-dev screen python3-pip libcairo2-dev libxt-dev libgirepository1.0-dev
-    pip install st7735 pycairo PyGObject pyserial dbus-python
-    git clone https://github.com/oe5hpm/dxlAPRS
-    cd dxlAPRS/src
-    make all
+sudo apt install ffmpeg cmake libncurses5-dev rtl-sdr git libx11-dev libxext-dev libopenjp2-7 libpng-dev libjpeg-dev screen python3-pip libcairo2-dev libxt-dev libgirepository1.0-dev libopenblas-dev
+git clone https://github.com/dbdexter-dev/sondedump.git
+cd sondedump
+mkdir build && cd build
+cmake -D ENABLE_AUDIO=OFF ..
+make
+sudo make install    
 ```
 
+Inoltre:
+```
+git clone  https://github.com/buttim/ciapasonde.git
+cd ciapasonde
+mkfifo fm.wav
+python -m venv .
+bin/pip install st7735 pycairo PyGObject pyserial dbus-python gpiod gpiodevice pillow rpi.lgpio
+```
+
+Obsoleto, ignorare:
+```
+git clone https://github.com/oe5hpm/dxlAPRS
+cd dxlAPRS/src
+make all
+```
 
 
 ## Blacklist driver SDR
